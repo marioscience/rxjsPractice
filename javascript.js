@@ -8,53 +8,46 @@ console.log("Trying RXJS too: ", Rx);
 var outputh2 = $('#outputH2');
 var refreshBtn = $('#refreshButton');
 
-var requestStream = Rx.Observable.just('https://api.github.com/users');
+var refreshClickStream = Rx.Observable.fromEvent(refreshBtn, 'click');
 
-// requestStream.subscribe(function (requestUrl) {
-//
-//     var responseStream = Rx.Observable.create(function (observer) {
-//         jQuery.getJSON(requestUrl)
-//             .done(function (response) { observer.onNext(response); })
-//             .fail(function (jqXHR, status, error) { observer.onError(error); })
-//             .always(function () {observer.onCompleted(); })
-//     });
-//
-//     responseStream.subscribe(function (response) {})
-// });
-
-// var responseMetaStream = requestStream
-//     .map(function (requestUrl) {
-//         return Rx.Observable.fromPromise(jQuery.getJSON(requestUrl));
-//     });
+var requestStream = refreshClickStream.startWith('startup click')
+    .map(function () {
+        var randomOffset = Math.floor(Math.random()*500);
+        console.log("random number[map 1]: ", randomOffset);
+        return 'https://api.github.com/users?since=' + randomOffset;
+    });
 
 var responseStream = requestStream
     .flatMap(function (requestUrl) {
+        console.log(requestUrl);
         return Rx.Observable.fromPromise(jQuery.getJSON(requestUrl));
     });
 
 
-responseStream.subscribe(function (response) {
-    console.log(response);
+// responseStream.subscribe(function (response) {
+//     console.log(response);
+// });
+
+
+var suggestion1Stream = responseStream
+    .map(function (listUsers) {
+        return listUsers[Math.floor(Math.random()*listUsers.length)];
+    })
+    .merge(
+        refreshClickStream.map( function () { return null; })
+    )
+    .startWith(null); // Same for suggestion2Stream and suggestion3Stream
+
+suggestion1Stream.subscribe(function (suggestion) {
+    // render first suggestion
+
+    if(suggestion === null) {
+        console.log("hiding suggestions ", suggestion);
+    } else {
+        console.log("rendering suggestions ", suggestion);
+    }
+
 });
-
-var refreshClickStream = Rx.Observable.fromEvent(refreshBtn, 'click');
-
-// var requestStream = refreshClickStream
-//     .map(function () {
-//         var randomOffset = Math.floor(Math.random() * 500);
-//         return 'https://api.github.com/users?since=' + randomOffset;
-//     });
-
-
-//continue at: [https://gist.github.com/staltz/868e7e9bc2a7b8c1f754#the-refresh-button]
-
-
-
-
-
-
-
-
 
 
 
