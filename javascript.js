@@ -34,13 +34,39 @@ var suggestion1Stream = responseStream
     .merge(
         refreshClickStream.map( function () { return null; })
     )
-    .startWith(null); // Same for suggestion2Stream and suggestion3Stream
+    .startWith(null)
+
+var suggestion2Stream = responseStream
+    .map(function (listUsers) {
+        return listUsers[Math.floor(Math.random()*listUsers.length)];
+    })
+    .merge(
+        refreshClickStream.map( function () { return null; })
+    )
+    .startWith(null);
+
+var suggestion3Stream = responseStream
+    .map(function (listUsers) {
+        return listUsers[Math.floor(Math.random()*listUsers.length)];
+    })
+    .merge(
+        refreshClickStream.map( function () { return null; })
+    )
+    .startWith(null);
 
 suggestion1Stream.subscribe(function (suggestion) {
    renderSuggestion('.suggestion1', suggestion);
 });
 
-function hideSuggestion(selector, suggestion) {
+suggestion2Stream.subscribe(function (suggestion) {
+    renderSuggestion('.suggestion2', suggestion);
+});
+
+suggestion3Stream.subscribe(function (suggestion) {
+    renderSuggestion('.suggestion3', suggestion);
+});
+
+function renderSuggestion(selector, suggestion) {
     // render first suggestion
 
     if(suggestion === null) {
@@ -50,9 +76,15 @@ function hideSuggestion(selector, suggestion) {
     } else {
         console.log("rendering suggestions ", suggestion);
 
-        $(selector).show();
+        var suggestionContainer = $(selector);
 
-        
+        suggestionContainer.find('.userimg').attr('src', suggestion.avatar_url);
+
+        var userNameContainer = suggestionContainer.find('.username');
+        userNameContainer.text(suggestion.login);
+        userNameContainer.attr('href', suggestion.html_url);
+
+        suggestionContainer.show();
     }
 
 }
