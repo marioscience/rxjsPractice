@@ -5,10 +5,17 @@
 console.log("Trying this script");
 console.log("Trying RXJS too: ", Rx);
 
-var outputh2 = $('#outputH2');
 var refreshBtn = $('#refreshButton');
 
+var close1ClickBtn = $('.closebtn1');
+var close2ClickBtn = $('.closebtn2');
+var close3ClickBtn = $('.closebtn3');
+
 var refreshClickStream = Rx.Observable.fromEvent(refreshBtn, 'click');
+
+var close1ClickStream = Rx.Observable.fromEvent(close1ClickBtn, 'click');
+var close2ClickStream = Rx.Observable.fromEvent(close2ClickBtn, 'click');
+var close3ClickStream = Rx.Observable.fromEvent(close3ClickBtn, 'click');
 
 var requestStream = refreshClickStream.startWith('startup click')
     .map(function () {
@@ -23,21 +30,10 @@ var responseStream = requestStream
 
 
 // responseStream.subscribe(function (response) {
-//     console.log(response);
 // });
 
-
-var suggestion1Stream = responseStream
-    .map(function (listUsers) {
-        return listUsers[Math.floor(Math.random()*listUsers.length)];
-    })
-    .merge(
-        refreshClickStream.map( function () { return null; })
-    )
-    .startWith(null)
-
-var suggestion2Stream = responseStream
-    .map(function (listUsers) {
+var suggestion1Stream = close1ClickStream.startWith('startup close')
+    .combineLatest(responseStream, function (click, listUsers) {
         return listUsers[Math.floor(Math.random()*listUsers.length)];
     })
     .merge(
@@ -45,8 +41,17 @@ var suggestion2Stream = responseStream
     )
     .startWith(null);
 
-var suggestion3Stream = responseStream
-    .map(function (listUsers) {
+var suggestion2Stream = close2ClickStream.startWith('start close')
+    .combineLatest(responseStream, function (click, listUsers) {
+        return listUsers[Math.floor(Math.random()*listUsers.length)];
+    })
+    .merge(
+        refreshClickStream.map( function () { return null; })
+    )
+    .startWith(null);
+
+var suggestion3Stream = close3ClickStream.startWith('start close')
+    .combineLatest(responseStream, function (click, listUsers) {
         return listUsers[Math.floor(Math.random()*listUsers.length)];
     })
     .merge(
@@ -70,12 +75,10 @@ function renderSuggestion(selector, suggestion) {
     // render first suggestion
 
     if(suggestion === null) {
-        console.log("hiding suggestions ", suggestion);
-
+        //Hiding suggestion
         $(selector).hide();
     } else {
-        console.log("rendering suggestions ", suggestion);
-
+        //Rendering suggestions
         var suggestionContainer = $(selector);
 
         suggestionContainer.find('.userimg').attr('src', suggestion.avatar_url);
